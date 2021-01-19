@@ -2,12 +2,28 @@ package module2;
 
 import java.time.LocalDateTime;
 
-public class TDItem {
+/**
+ * <h4>TD Item Class</h4>
+ * Used for each item instance
+ * <p>
+ * This was created by Alex Porter and is provided AS-IS.
+ *
+ * @author Alex Porter
+ * @since 2021-01-19
+ */
+public class TDItem implements java.io.Serializable {
 
     private int id;
     private String itemName;
     private String listName;
     private LocalDateTime dueDate;
+
+    public TDItem(String itemName) {
+        this.id = 0;
+        this.itemName = itemName;
+        this.listName = null;
+        this.dueDate = null;
+    }
 
     /**
      * @param id Unique identifier given to item
@@ -33,4 +49,35 @@ public class TDItem {
         this.dueDate = dueDate;
     }
 
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public String getItemName() {
+        return itemName;
+    }
+
+    public void setItemName(String itemName) {
+        this.itemName = itemName;
+    }
+
+    public String getListName() {
+        return listName;
+    }
+
+    public void setListName(String listName) {
+        this.listName = listName;
+    }
+
+    public LocalDateTime getDueDate() {
+        return dueDate;
+    }
+
+    public void setDueDate(LocalDateTime dueDate) {
+        this.dueDate = dueDate;
+    }
 }
