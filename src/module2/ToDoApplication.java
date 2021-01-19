@@ -88,14 +88,20 @@ public class ToDoApplication {
 
     }
 
-    //add list <name>
-    //add item <list_name||list_id> <name>
+    /**
+     * Logic to add either items to a list, or to add a list.
+     * <p><b>Usage:</b></p>
+     * <p><b>add list</b></p>
+     * <p><b>add item [list_name || list_id] [name]</b></p>
+     * @param commandArguments
+     */
     public static void add(String[] commandArguments) {
         switch(commandArguments[1]) {
             case "item":
                 int listId = getIdFromListName(commandArguments[2]);
                 String itemName = commandArguments[3];
                 //implement dueDate
+                //Check if the lists exists, if its -1, it does not exist
                 if(listId != -1) {
                     toDoLists.get(listId).addItem(
                             new TDItem(itemName)
@@ -133,6 +139,13 @@ public class ToDoApplication {
         }
     }
 
+    /**
+     * Returns the list id based on the name of a list. If an integer is parsed through and it exists (based on the
+     * lists from toDoLists) it will return the list id. If the name is found, it will return that list id. If
+     * the id or name doesn't exist, it returns -1.
+     * @param listName (String) The list name or id to be parsed
+     * @return (int) Returns the associated list id or -1 if it cannot be found
+     */
     public static int getIdFromListName(String listName) {
         if(isInteger(listName) && Integer.parseInt(listName) < toDoLists.size())
             return Integer.parseInt(listName);
@@ -155,6 +168,9 @@ public class ToDoApplication {
         return true;
     }
 
+    /**
+     * Prints out the current lists that are stored / active
+     */
     public static void printLists() {
         System.out.println("======= Lists =======");
         if(toDoLists.size() != 0) {
@@ -169,6 +185,11 @@ public class ToDoApplication {
         }
     }
 
+    /**
+     * Exits the application gracefully, before exiting it will attempt to save the user's file
+     * if unsuccessful it will still exit and throw error code 1.
+     * @throws InterruptedException
+     */
     public static void exitApplication() throws InterruptedException {
         if(toDoLists.size() != 0) {
             System.out.println("Saving output......");
@@ -189,6 +210,9 @@ public class ToDoApplication {
         }
     }
 
+    /**
+     * Initializes the to do application and loads saved lists
+     */
     public static void initToDo() {
 
     }
