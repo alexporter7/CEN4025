@@ -81,6 +81,9 @@ public class ToDoApplication {
             case "remove":
                 remove(commandArguments);
                 break;
+            case "view":
+                view(commandArguments);
+                break;
             default:
                 System.out.println(String.format("Command [%s] is not a valid command", commandArguments[0]));
                 main(null);
@@ -91,13 +94,17 @@ public class ToDoApplication {
     /**
      * Logic to add either items to a list, or to add a list.
      * <p><b>Usage:</b></p>
-     * <p><b>add list</b></p>
+     * <p><b>add list [list_name]</b></p>
      * <p><b>add item [list_name || list_id] [name]</b></p>
-     * @param commandArguments
+     * @param commandArguments (String[]) Command split up to be further parsed
      */
     public static void add(String[] commandArguments) {
         switch(commandArguments[1]) {
             case "item":
+                if(commandArguments.length != 4) {
+                    System.out.println("Invalid arguments. (add item [list_name || list_id] [name])");
+                    return;
+                }
                 int listId = getIdFromListName(commandArguments[2]);
                 String itemName = commandArguments[3];
                 //implement dueDate
@@ -110,6 +117,10 @@ public class ToDoApplication {
 
                 break;
             case "list":
+                if(commandArguments.length != 3) {
+                    System.out.println("Invalid arguments. (add list [list_name])");
+                    return;
+                }
                 toDoLists.add(new TDList(
                         toDoLists.size(),   //List ID
                         commandArguments[2] //List Name
@@ -117,18 +128,51 @@ public class ToDoApplication {
         }
     }
 
-    //edit <list,item> <id||name> <(name),(name,due_date)>
+    /**
+     * Logic to edit either items from a list, or to edit a list.
+     * <p><b>Usage:</b></p>
+     * <p><b>edit list [id || name] [newName]</b></p>
+     * <p><b>edit item [id || listName] [itemId] [newName]</b></p>
+     * @param commandArguments (String[]) Command split up to be further parsed
+     */
     public static void modify(String[] commandArguments) {
+        int listId = 0;
+        int itemId = 0;
         switch(commandArguments[1]) {
             case "item":
-
+                if(commandArguments.length != 5) {
+                    System.out.println("Invalid arguments. (edit item [id || listName] [itemId] [newName])");
+                    return;
+                }
+                listId = getIdFromListName(commandArguments[2]);
+                itemId = getIdFromItemName(listId, commandArguments[3]);
+                if(listId == -1) {
+                    System.out.println("Invalid List ID/Name");
+                } else if(itemId == -1) {
+                    System.out.println("Invalid Item ID/Name");
+                } else {
+                    toDoLists.get(listId).getItem(itemId).setItemName(commandArguments[4]);
+                }
                 break;
             case "list":
-
+                if(commandArguments.length != 4) {
+                    System.out.println("Invalid arguments. (edit list [id || name] [newName])");
+                    return;
+                }
+                listId = getIdFromListName(commandArguments[2]);
+                if(listId == -1)
+                    System.out.println("Invalid List ID/Name");
+                else
+                    toDoLists.get(listId).setListName(commandArguments[3]);
         }
     }
 
-    //remove <list,item> <id||name>
+    /**
+     * Logic to remove either items from a list, or to remove a list.
+     * <p><b>Usage:</b></p>
+     * <p><b>remove [list || item] [id || name]</b></p>
+     * @param commandArguments (String[]) Command split up to be further parsed
+     */
     public static void remove(String[] commandArguments) {
         switch(commandArguments[1]) {
             case "item":
@@ -137,6 +181,52 @@ public class ToDoApplication {
             case "list":
 
         }
+    }
+
+    /**
+     * Logic to view either items from a specified list or all items from all lists
+     * <p><b>Usage:</b></p>
+     * <p><b>view list [list_name || list_id]</b></p>
+     * <p><b>view all</b></p>
+     * @param commandArguments (String[]) Command split up to be further parsed
+     */
+    public static void view(String[] commandArguments) {
+        switch(commandArguments[1]) {
+            case "list":
+                if(commandArguments.length != 3) {
+                    System.out.println("Invalid Arguments. (view list [list_name || list_id])");
+                    return;
+                }
+                int listId = getIdFromListName(commandArguments[2]);
+                if(listId != -1) {
+                    System.out.println(String.format("### %s ###", toDoLists.get(listId).getListName()));
+                    printListItems(listId);
+                } else {
+                    System.out.println("List does not exist or was not valid");
+                }
+                break;
+            case "all":
+                if(commandArguments.length != 2) {
+                    System.out.println("Invalid Arguments. (view all)");
+                }
+                for(TDList tdList : toDoLists) {
+                    System.out.println(String.format("### %s ###", tdList.getListName()));
+                    printListItems(tdList.getListId());
+                }
+                break;
+
+        }
+    }
+
+    /**
+     * Prints out items from a specified list
+     * @param listId (int) List ID
+     */
+    public static void printListItems(int listId) {
+        for(TDItem item : toDoLists.get(listId).getListItems()) {
+            System.out.println(String.format("Item ID: %s | Item Name: %s", item.getId(), item.getItemName()));
+        }
+        System.out.println(); //Print a blank line
     }
 
     /**
@@ -157,6 +247,33 @@ public class ToDoApplication {
         return -1;
     }
 
+    /**
+     * Returns the item id based on the name of an item. If an integer is parsed through and it exists it will
+     * return the list id. If the name is found, it will return that list id. If
+     * the id or name doesn't exist, it returns -1.
+     * @param listId (int) The list name or id to be parsed
+     * @param itemName (String) The item name or id to be parsed
+     * @return (int) Returns the associated list id or -1 if it cannot be found
+     */
+    public static int getIdFromItemName(int listId, String itemName) {
+        if(isInteger(itemName) && Integer.parseInt(itemName) < toDoLists.get(listId).getListItems().size()) {
+            return Integer.parseInt(itemName);
+        }
+
+        for(TDItem tdItem : toDoLists.get(listId).getListItems()) {
+            if(tdItem.getItemName().equals(itemName)) {
+                return tdItem.getId();
+            }
+        }
+
+        return -1;
+    }
+
+    /**
+     * Checks to see if a String can be parsed as an integer
+     * @param listId (String) List or Item ID
+     * @return (boolean) Returns True if it can be parsed or False if not
+     */
     public static boolean isInteger(String listId) {
         try {
             Integer.parseInt(listId);
@@ -214,11 +331,12 @@ public class ToDoApplication {
      * Initializes the to do application and loads saved lists
      */
     public static void initToDo() {
-
+        loadOutput();
+        isInit = true;
     }
 
     /**
-     * Serializes and saves currently active To Do List data into todo.ser
+     * Serializes and saves currently active To Do List data into to do.ser
      * @return (ResultType) Returns either PASS or FAIL to handle error action and alert user
      */
     public static TDResult saveOutput() {
@@ -243,6 +361,10 @@ public class ToDoApplication {
         return saveResult;
     }
 
+    /**
+     * Deserializes and saves currently active To Do List data into to do.ser
+     * @return (ResultType) Returns either PASS or FAIL to handle error action and alert user
+     */
     public static TDResult loadOutput() {
         TDResult loadResult = new TDResult("Data could not be loaded.", TDResult.ResultType.FAIL);
         try {
@@ -255,11 +377,15 @@ public class ToDoApplication {
             objectInput.close();
             fileInput.close();
         } catch (IOException ioException) {
-            ioException.printStackTrace();
-            System.out.println(String.format("%s could not be opened or found", DATA_FILE));
+            if(isInit) {
+                ioException.printStackTrace();
+                System.out.println(String.format("%s could not be opened or found", DATA_FILE));
+            }
         } catch (ClassNotFoundException classNotFoundException) {
-            classNotFoundException.printStackTrace();
-            System.out.println("Classes could not be loaded into the ToDo List");
+            if(isInit) {
+                classNotFoundException.printStackTrace();
+                System.out.println("Classes could not be loaded into the ToDo List");
+            }
         }
 
         return loadResult;

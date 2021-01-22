@@ -47,7 +47,8 @@ public class TDList implements java.io.Serializable {
      * @param item (TDItem) - The item that will be appended to the list
      */
     public void addItem(TDItem item) {
-        item.setId(this.listItems != null ? 0 : this.listItems.get(this.listItems.size()).getId() + 1);
+        item.setId(this.listItems.size() != 0 ? this.listItems.get(this.listItems.size() - 1).getId() + 1 : 0);
+
         item.setListName(this.listName);
         this.listItems.add(item);
     }
@@ -70,6 +71,10 @@ public class TDList implements java.io.Serializable {
 
     public void setListItems(List<TDItem> listItems) {
         this.listItems = listItems;
+    }
+
+    public TDItem getItem(int id) {
+        return this.listItems.get(id);
     }
 
     @Override
