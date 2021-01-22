@@ -58,7 +58,7 @@ public class TDItem implements java.io.Serializable {
     }
 
     public String getItemName() {
-        return itemName;
+        return this.itemName;
     }
 
     public void setItemName(String itemName) {

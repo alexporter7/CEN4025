@@ -40,16 +40,6 @@ public class ToDoApplication {
     private static final String DATA_FILE = "todo.ser";
 
     public static void main(String[] args) throws InterruptedException {
-//        TDItem item = new TDItem(0, "test", "test");
-//        TDItem item2 = new TDItem(1, "test2", "test");
-//        TDItem item3 = new TDItem(2, "test3", "test");
-//
-//        List<TDItem> items = Arrays.asList(item, item2, item3);
-//        TDList list = new TDList(0, "test", items);
-//        TDList list2 = new TDList(1, "test2", items);
-//
-//        toDoLists.add(list);
-//        toDoLists.add(list2);
 
         //Confirm the code has been initialized
         if(!isInit) initToDo();
@@ -69,6 +59,11 @@ public class ToDoApplication {
 
     }
 
+    /**
+     * Parses commands and breaks string into array for further processing
+     * @param command (String) - Command string (separated by spaces)
+     * @throws InterruptedException
+     */
     public static void parseCommand(String command) throws InterruptedException {
         String[] commandArguments = command.split(" ");
         switch (commandArguments[0]) {
@@ -86,9 +81,34 @@ public class ToDoApplication {
                 break;
             default:
                 System.out.println(String.format("Command [%s] is not a valid command", commandArguments[0]));
+                printHelpMenu();
                 main(null);
         }
 
+    }
+
+    /**
+     * Prints the help menu to the console
+     */
+    public static void printHelpMenu() {
+        StringBuilder helpMenu = new StringBuilder();
+        helpMenu.append("======= Help Menu =======\n");
+        helpMenu.append("Add - Adds an item\n");
+        helpMenu.append("Usages:\n");
+        helpMenu.append("\tadd item [list_name || list_id] [name])\n");
+        helpMenu.append("Edit - Edit either an item or list name\n");
+        helpMenu.append("Usages:\n");
+        helpMenu.append("\tedit list [id || name] [newName]\n");
+        helpMenu.append("\tedit item [id || listName] [itemId] [newName]\n");
+        helpMenu.append("Remove - Remove a list or item\n");
+        helpMenu.append("Usages:\n");
+        helpMenu.append("\tremove [list || item] [id || name]\n");
+        helpMenu.append("View - View items from either a lists or all lists\n");
+        helpMenu.append("Usages:\n");
+        helpMenu.append("\tview list [list_name || list_id]\n");
+        helpMenu.append("\tview all\n");
+
+        System.out.println(helpMenu.toString());
     }
 
     /**
@@ -151,7 +171,7 @@ public class ToDoApplication {
                 } else if(itemId == -1) {
                     System.out.println("Invalid Item ID/Name");
                 } else {
-                    toDoLists.get(listId).getItem(itemId).setItemName(commandArguments[4]);
+                    toDoLists.get(getListFromId(listId)).getItem(itemId).setItemName(commandArguments[4]);
                 }
                 break;
             case "list":
@@ -163,7 +183,7 @@ public class ToDoApplication {
                 if(listId == -1)
                     System.out.println("Invalid List ID/Name");
                 else
-                    toDoLists.get(listId).setListName(commandArguments[3]);
+                    toDoLists.get(getListFromId(listId)).setListName(commandArguments[3]);
         }
     }
 
@@ -174,9 +194,17 @@ public class ToDoApplication {
      * @param commandArguments (String[]) Command split up to be further parsed
      */
     public static void remove(String[] commandArguments) {
+        int listId = 0;
+        int itemId = 0;
         switch(commandArguments[1]) {
             case "item":
-
+                if(commandArguments.length != 4) {
+                    System.out.println("Invalid Arguments. (remove item [listId || listName] [id || name]");
+                    return;
+                }
+                listId = getIdFromListName(commandArguments[2]);
+                itemId = getIdFromItemName(listId, commandArguments[3]);
+                toDoLists.get(getListFromId(listId)).removeItem(getItemFromId(listId, itemId));
                 break;
             case "list":
 
@@ -199,7 +227,7 @@ public class ToDoApplication {
                 }
                 int listId = getIdFromListName(commandArguments[2]);
                 if(listId != -1) {
-                    System.out.println(String.format("### %s ###", toDoLists.get(listId).getListName()));
+                    System.out.println(String.format("### %s ###", toDoLists.get(getListFromId(listId)).getListName()));
                     printListItems(listId);
                 } else {
                     System.out.println("List does not exist or was not valid");
@@ -237,8 +265,14 @@ public class ToDoApplication {
      * @return (int) Returns the associated list id or -1 if it cannot be found
      */
     public static int getIdFromListName(String listName) {
-        if(isInteger(listName) && Integer.parseInt(listName) < toDoLists.size())
-            return Integer.parseInt(listName);
+        if(isInteger(listName)) {
+            for(TDList tdList: toDoLists) {
+                int listId = Integer.parseInt(listName);
+                if(tdList.getListId() == listId)
+                    return tdList.getListId();
+            }
+            return -1;
+        }
 
         for(TDList tdList : toDoLists) {
             if(tdList.getListName().equals(listName))
@@ -256,8 +290,14 @@ public class ToDoApplication {
      * @return (int) Returns the associated list id or -1 if it cannot be found
      */
     public static int getIdFromItemName(int listId, String itemName) {
-        if(isInteger(itemName) && Integer.parseInt(itemName) < toDoLists.get(listId).getListItems().size()) {
-            return Integer.parseInt(itemName);
+        if(isInteger(itemName)) {
+            int itemId = Integer.parseInt(itemName);
+            for(TDItem tdItem : toDoLists.get(listId).getListItems()) {
+                if(tdItem.getId() == itemId) {
+                    return tdItem.getId();
+                }
+            }
+            return -1;
         }
 
         for(TDItem tdItem : toDoLists.get(listId).getListItems()) {
@@ -265,7 +305,33 @@ public class ToDoApplication {
                 return tdItem.getId();
             }
         }
+        return -1;
+    }
 
+    /**
+     * Returns a list based on its ID
+     * @param listId (int) - The ID of the list
+     * @return (TDList) - If it exists will return the list
+     */
+    public static int getListFromId(int listId) {
+        int counter = 0;
+        for(TDList list : toDoLists) {
+            if(list.getListId() == listId) {
+                return counter;
+            }
+            counter++;
+        }
+        return -1;
+    }
+
+    public static int getItemFromId(int listId, int itemId) {
+        int counter = 0;
+        for(TDItem tdItem : toDoLists.get(getListFromId(listId)).getListItems()) {
+            if(tdItem.getId() == itemId) {
+                return counter;
+            }
+            counter++;
+        }
         return -1;
     }
 
@@ -332,6 +398,7 @@ public class ToDoApplication {
      */
     public static void initToDo() {
         loadOutput();
+        System.out.println("Type help to get a list of commands and usages");
         isInit = true;
     }
 

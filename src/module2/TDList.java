@@ -53,6 +53,10 @@ public class TDList implements java.io.Serializable {
         this.listItems.add(item);
     }
 
+    public void removeItem(int itemId) {
+        this.listItems.remove(itemId);
+    }
+
     public String getListName() {
         return this.listName;
     }
@@ -74,7 +78,16 @@ public class TDList implements java.io.Serializable {
     }
 
     public TDItem getItem(int id) {
-        return this.listItems.get(id);
+        int counter = 0;
+        if(this.listItems.size() != 0) {
+            for (TDItem tdItem : this.listItems) {
+                if (tdItem.getId() == id) {
+                    return this.listItems.get(counter);
+                }
+                counter++;
+            }
+        }
+        return null;
     }
 
     @Override
