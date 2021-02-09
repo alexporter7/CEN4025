@@ -61,6 +61,8 @@ public class TestListTypes {
                         "Hashtable: %s", totalTime.get(0), totalTime.get(1), totalTime.get(2)
         ));
 
+
+
     }
 
     /**
